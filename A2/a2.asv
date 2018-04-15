@@ -3,54 +3,110 @@
 % Assignment 2, Question 4, ECEN 310
 
 close all;
-clear;
-clf;
+clear all;
 clc;
 
+set(0, 'defaulttextInterpreter','latex')
 
-% creates the noise for an exact simulated Pm
+constel = [-3 -1 1 3]  % init signal constell
+M = 4;
 
-N0 = 0.5;
-Eb = 1;
+N = 1e5;
 
-count = 1000;
 
-% init const. points on 2D plane
-bit0 = [Eb 0];
-bit1 = [-Eb 0];
-bit2 = [0 Eb];
-bit3 = [0 -Eb];
 
-decisionPoints = [bit0; bit1; bit2; bit3];  
+num_tests= 50;
 
-SNR = Eb/N0; %since all equal, can do this
 
-% init 0 mean noise on 2D plane
-noise = normrnd(0, N0/2, [count 2]);
+s = zeros(N,1);
+n = zeros(N,1);
+r = zeros(N,1);
+sest = zeros(N,1);
 
-data = [bit0.*(ones(count/4,2)); bit1.*(ones(count/4,2)); 
-    bit2.*(ones(count/4,2)); bit3.*(ones(count/4,2))] + noise;
+Es = 1;
+
+results = zeros(num_tests,2);
+iter = 1;
+
+for SNRdB = logspace(-1,2,num_tests);
+    No = Es/db2pow(SNRdB);
+
+    rng(6) % sets generator seed
+
+    s = randsrc(N,1,constel); % get rnd symbols, tx
+    n = sqrt(No/2)*randn(N,1); % noise samples
+    r = s + n; % rx
+
+
+    for indx = 1:N
+        %returns decision point closest to the received message
+        [dmin, const_indx] = min(abs(r(indx) - constel)); 
+        sest(indx) = constel(const_indx);
+    end
+
+
+    %[s r sest];
+
+    %SERnumlog = log10(nnz(s-sest)) - log10(N); %computation in log to deal with small num
+    %SERnum = 10^SERnumlog; %convert to linear scale
+    SERnum = nnz(s-sest)/N;
+    BERnum = SERnum *2; %since 4-ary system (2 bits per symbol)
+    results(iter, :) = [SNRdB BERnum];
+    
+    iter = iter + 1;
+end
+
 
 figure(1)
+
+loglog(results(:,1), results(:,2))
+xlabel('SNR/bit (dB/bit)');
+ylabel('Bit Error Rate');
 hold on
-ax = gca;
-ax.YAxisLocation = 'origin';  % setting y axis location to origin
-ax.XAxisLocation = 'origin';  % setting y axis location to origin
-grid on
-scatter(data(:,1), data(:,2),'.')
-scatter(decisionPoints(:,1), decisionPoints(:,2),'+','SizeData', 24);
-
-xlabel('$x_1$','interpreter','latex');
-ylabel('$x_2$','interpreter','latex');
-
-
-% decision making finction, for exact simulated Pm
 
 
 % plots the analytical expression found in class
+iter = 1;
+analytData = zeros(num_tests,2);
+for SNRdB = logspace(-1,2,num_tests);
+    No = Es/db2pow(SNRdB);
+    analytSER = 2*((M-1)/M)* qfunc(sqrt((2*Es)/No));
+    analytData(iter, :) = [SNRdB analytSER];
+    
+    iter = iter + 1;
+end
+analytBER = 2*analytSER;
 
 
-% plots the union bound accounding to the min diatance approx
+loglog(results(:,1), analytBER);
+
+% plots the union bound accounding to the min distance approx
+iter = 1;
+unionBoundData = zeros(num_tests,2);
+for SNRdB = logspace(-1,2,num_tests);
+    No = Es/db2pow(SNRdB);
+    unionBoundSER = 0;
+    for indx = 1:length(constel)
+        if (indx ~= M) 
+            dist = abs(constel(indx) - constel(M));
+            unionBoundSER = unionBoundSER + qfunc(dist/(sqrt(2*No)));
+        end
+    end
+    iter = iter + 1;
+end
+analytBER = 2*analytSER;
+unionBoundBER = 2* unionBoundSER;
+
+loglog(results(:,1), unionBoundBER* ones(num_tests,1));
+
 
 
 % plots the nbound using min dist approx and bound on q func
+
+mindist = Es *2; %due to M-ary PAM around centre
+unionQfuncSER = (M-1)* qfunc(mindist/sqrt(2*No)); 
+unionQfuncBER = 2*unionQfuncSER;
+
+loglog(results(:,1), unionQfuncBER* ones(num_tests,1));
+
+hold off
