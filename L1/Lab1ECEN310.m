@@ -68,7 +68,7 @@ for SNRdBindx = 1:length(SNRdB_axis);
     
     %[s r sest];
 
-    %SERnumlog = log10(nnz(s-sest)) - log10(N); %computation in log to deal with small num
+    %SERnumlog = log10(nnz(s-sest)) - log10(N); %computation in log to deal with small nu
     %SERnum = 10^SERnumlog; %convert to linear scale
     SERnum = nnz(s-sest)/N;
     BERnum = SERnum *log2(M); %since 4-ary system (2 bits per symbol)
