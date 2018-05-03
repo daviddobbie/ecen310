@@ -1,0 +1,587 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Lab1ECEN310Q3</title><meta name="generator" content="MATLAB 9.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-05-03"><meta name="DC.source" content="Lab1ECEN310Q3.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">a) generate raised cosine pulse</a></li><li><a href="#3">b)</a></li><li><a href="#4">c) Sampling the filtered data</a></li><li><a href="#5">d)e) add D extra symbols and remove D at end</a></li><li><a href="#6">f) add AWGN noise to the simulation</a></li><li><a href="#7">g,h)</a></li></ul></div><pre class="codeinput"><span class="comment">% David Dobbie : 300340161</span>
+<span class="comment">% ECEN 310 / ENGR 440 Communications Engineering</span>
+<span class="comment">% Lab 1 - Bit Error Rate</span>
+
+clear <span class="string">all</span>; clc;
+set(0, <span class="string">'defaulttextInterpreter'</span>,<span class="string">'latex'</span>)
+<span class="comment">%%Q3:</span>
+<span class="comment">% how timing offset impacts the SER performance</span>
+
+
+
+N = 10;
+
+s = zeros(N,1);
+n = zeros(N,1);
+r = zeros(N,1);
+sest = zeros(N,1);
+Es = 1;
+</pre><h2 id="2">a) generate raised cosine pulse</h2><p>The raised cosine pulse lies from 0 to 64 since it is not possible to implement a non-causal filter. This will lead an offset in symbols that need to be accounted for.</p><pre class="codeinput">b =0.5;
+D = 2;
+Rs = 16;
+T = 1;
+
+
+
+
+
+SNRdB_axis = 0:5:15;
+M =2;
+constel = exp((j * 2* pi * (0:M-1))/ (M));
+
+rc = rcosfir(b,D,Rs,T);
+rc_axis = -D*Rs:D*Rs;
+figure(1)
+stem(rc);
+title(<span class="string">'Raised Cosine Pulse filter'</span>)
+xlabel(<span class="string">'Time'</span>)
+ylabel(<span class="string">'Pulse Amplitude'</span>)
+</pre><img vspace="5" hspace="5" src="Lab1ECEN310Q3_01.png" alt=""> <h2 id="3">b)</h2><pre class="codeinput">figure(2)
+
+rng(6);
+s = real(randsrc(N,1,constel)); <span class="comment">% get rnd symbols, tx</span>
+n = 0;
+r = s + n; <span class="comment">% rx</span>
+
+x = upsample(s,Rs); <span class="comment">% simulate filter sampled at Ts = T/Rs</span>
+y = filter(rc,1,x); <span class="comment">%pass upsampled data through raised cosine filter</span>
+
+subplot(2,1,2)
+stem(y);
+title(<span class="string">'Upsampled Data Stream'</span>)
+xlabel(<span class="string">'Time'</span>)
+ylabel(<span class="string">'Pulse Amplitude'</span>)
+
+subplot(2,1,1)
+stem(s);
+title(<span class="string">'Original Data Stream'</span>)
+xlabel(<span class="string">'Time'</span>)
+ylabel(<span class="string">'Pulse Amplitude'</span>)
+</pre><img vspace="5" hspace="5" src="Lab1ECEN310Q3_02.png" alt=""> <h2 id="4">c) Sampling the filtered data</h2><p>This demonstrates the sampling of filtered data through a raised cosine pulse. There is no noise in this initialisation.</p><pre class="codeinput">Te_axis = [1 2 4]; <span class="comment">%timing error</span>
+figure(3)
+<span class="keyword">for</span> indx = 1:length(Te_axis)
+        Te = Te_axis(indx); <span class="comment">% timing error</span>
+
+        s = real(randsrc(N,1,constel)); <span class="comment">% get rnd symbols, tx</span>
+        n = 0;
+
+        x = upsample(s,Rs); <span class="comment">% simulate filter sampled at Ts = T/Rs</span>
+        y = filter(rc,1,x); <span class="comment">%pass upsampled data through raised cosine filter</span>
+        z = downsample(y,Rs,Te_axis(indx)); <span class="comment">% the receiver, no noise</span>
+
+
+
+        subplot(3,1,indx)
+        stem(z);
+        title([<span class="string">'Timing offset, $ T_e$ = '</span> num2str(Te)])
+        xlabel(<span class="string">'Time'</span>)
+        ylabel(<span class="string">'Pulse Amplitude'</span>)
+
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Lab1ECEN310Q3_03.png" alt=""> <h2 id="5">d)e) add D extra symbols and remove D at end</h2><p>This is done to align the sent bits with their corresponding mapped received bits. This allows for analysis of it.</p><pre class="codeinput">Ns = N + D;
+
+Te_axis = [0 1 2 4]; <span class="comment">%timing error</span>
+figure(4)
+<span class="keyword">for</span> indx = 1:length(Te_axis)
+        Te = Te_axis(indx); <span class="comment">% timing error</span>
+
+        s = real(randsrc(Ns,1,constel)); <span class="comment">% get rnd symbols, tx</span>
+        n = 0;
+
+        x = upsample(s,Rs); <span class="comment">% simulate filter sampled at Ts = T/Rs</span>
+        s_ups = filter(rc,1,x); <span class="comment">%pass upsampled data through raised cosine filter</span>
+
+        s_ups=s_ups;
+
+        r = downsample(s_ups+n,Rs,Te); <span class="comment">% received section</span>
+
+
+        r = r(1+D:end); <span class="comment">% strip D bits at start</span>
+        s = s(1:end-D); <span class="comment">% strip D bits at end</span>
+
+
+        subplot(4,1,indx)
+        hold <span class="string">on</span>
+        stem(s,  <span class="string">'filled'</span>, <span class="string">'linewidth'</span>, 5, <span class="string">'Color'</span>, <span class="string">'blue'</span>);
+        stem(r, <span class="string">'linewidth'</span>, 1.5, <span class="string">'Color'</span>, <span class="string">'cyan'</span>);
+        hold <span class="string">off</span>
+        ylim([-2 2]);
+        xlim([0 14]);
+        title([<span class="string">'Timing offset, $ T_e$ = '</span> num2str(Te)])
+        xlabel(<span class="string">'Time'</span>)
+        ylabel(<span class="string">'Amplitude'</span>)
+        leg = legend(<span class="string">'Sent'</span>,<span class="string">'Received'</span>);
+
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Lab1ECEN310Q3_04.png" alt=""> <h2 id="6">f) add AWGN noise to the simulation</h2><p>AWGN is added to the signal. It is not complex here as there is only one dimension to set the decision points. We see in comparison to the previous figure that noise has come into effect on the system.</p><pre class="codeinput">Ns = N + D;
+Es = 1;
+
+SNRdB = 5;
+
+Te_axis = [0 1 2 4]; <span class="comment">%timing error</span>
+figure(5)
+<span class="keyword">for</span> indx = 1:length(Te_axis)
+
+        No = Es/db2pow(SNRdB);
+
+        rng(6);
+        Te = Te_axis(indx); <span class="comment">% timing error</span>
+
+        n = sqrt(No/2)*randn(Ns,1); <span class="comment">% noise samples</span>
+
+        s = real(randsrc(Ns,1,constel)); <span class="comment">% get rnd symbols, tx</span>
+
+        s_tx = s + n;
+
+        x = upsample(s_tx,Rs); <span class="comment">% simulate filter sampled at Ts = T/Rs</span>
+        s_ups = filter(rc,1,x); <span class="comment">%pass upsampled data through raised cosine filter</span>
+
+
+
+        r = downsample(s_ups,Rs,Te); <span class="comment">% received section</span>
+
+
+        r = r(1+D:end); <span class="comment">% strip D bits at start</span>
+        s = s(1:end-D); <span class="comment">% strip D bits at end</span>
+
+
+        subplot(4,1,indx)
+        hold <span class="string">on</span>
+        stem(s,  <span class="string">'filled'</span>, <span class="string">'linewidth'</span>, 5, <span class="string">'Color'</span>, <span class="string">'blue'</span>);
+        stem(r, <span class="string">'linewidth'</span>, 1.5, <span class="string">'Color'</span>, <span class="string">'cyan'</span>);
+        hold <span class="string">off</span>
+        ylim([-2 2]);
+        xlim([0 14]);
+        title([<span class="string">'Timing offset, $ T_e$ = '</span> num2str(Te)])
+        xlabel(<span class="string">'Time'</span>)
+        ylabel(<span class="string">'Amplitude'</span>)
+        leg = legend(<span class="string">'Sent'</span>,<span class="string">'Received'</span>);
+
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Lab1ECEN310Q3_05.png" alt=""> <h2 id="7">g,h)</h2><p>We see that larger timing errors lead to larger symbol error rates.</p><pre class="codeinput">SNRdBAxis = -4:2:8;
+TeAxis = [0 1 2 4];
+SERresults = zeros(length(SNRdBAxis), length(TeAxis));
+M_Axis = [2 4 8];
+
+Ns = 1e4;
+
+<span class="comment">% loop through and test different M-ary schemes</span>
+<span class="keyword">for</span> M_indx = 1:length(M_Axis)
+    M = M_Axis(M_indx);
+    <span class="keyword">for</span> p = 1:length(SNRdBAxis)
+        <span class="keyword">for</span> q = 1:length(TeAxis)
+            SNRdB_val = SNRdBAxis(p);
+            Te = TeAxis(q);
+            SERresults(p,q) = getSER(M, Ns, SNRdB_val, Te, Rs, D, rc);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    <span class="comment">% plotting system</span>
+    figure(5 + M_indx);
+    hold <span class="string">on</span>
+    grid <span class="string">on</span>
+    ax = gca;
+    semilogy(SNRdBAxis ,SERresults,<span class="string">'linewidth'</span>, 1.5)
+    ax.ColorOrderIndex = 1;
+
+    set(ax,<span class="string">'yscale'</span>,<span class="string">'log'</span>)
+
+    hold <span class="string">off</span>
+
+    xlabel(<span class="string">"$ SNR_{dB} $"</span>)
+    ylabel(<span class="string">"Symbol Error Rate (SER)"</span>)
+    str = sprintf(<span class="string">'Comparison of Timing Error for %c-ary PSK'</span>, (num2str(M)));
+    title(str);
+    lgnd = legend(<span class="string">'$T_e = 0$'</span>,<span class="string">'$T_e = \frac{T}{16}$'</span>,<span class="string">'$T_e = \frac{T}{8}$'</span>, <span class="keyword">...</span>
+        <span class="string">'$T_e = \frac{T}{4}$'</span>);
+    lgnd.Location = <span class="string">'southwest'</span>;
+    set(lgnd,<span class="string">'FontSize'</span>,10)
+    set(lgnd,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)
+<span class="keyword">end</span>
+
+<span class="comment">% Functions:</span>
+<span class="comment">% get SER function</span>
+<span class="comment">% Inputs: M - number of decision points; Ns - number of data points</span>
+<span class="comment">% simulated; SNRdB - SNRdB being tested; phaseError for phase error</span>
+<span class="comment">% introduced</span>
+<span class="comment">% Outputs: SER</span>
+
+<span class="comment">% get SER function</span>
+<span class="comment">% Inputs: M - number of decision points; Ns - number of data points</span>
+<span class="comment">% simulated; SNRdB - SNRdB being tested; Te - timing error causing ISI;</span>
+<span class="comment">% Rs - symbol rate</span>
+<span class="comment">% Outputs: SER</span>
+
+<span class="keyword">function</span> SER = getSER(M, N, SNRdB, Te, Rs, D, rc);
+    constel = exp((j * 2* pi * (0:M-1))/ (M));
+
+    Ns = N + D;
+
+    Es = 1;
+
+    No = Es/db2pow(SNRdB);
+
+    s = randsrc(Ns,1,constel); <span class="comment">% get rnd symbols, tx</span>
+    n = sqrt(No/2)*complex(randn(Ns,1),randn(Ns,1)); <span class="comment">% noise samples</span>
+
+    <span class="comment">% simulating timing error</span>
+    s_tx = s + n;
+    x = upsample(s_tx,Rs); <span class="comment">% simulate filter sampled at Ts = T/Rs</span>
+    s_ups = filter(rc,1,x); <span class="comment">%pass upsampled data through raised cosine filter</span>
+    r = downsample(s_ups,Rs,Te); <span class="comment">% received section</span>
+    r = r(1+D:end); <span class="comment">% strip D bits at start</span>
+    s = s(1:end-D); <span class="comment">% strip D bits at end</span>
+
+
+    sest = zeros(N,1);
+
+    <span class="keyword">for</span> indx = 1:N
+        <span class="comment">%returns decision point closest to the received message</span>
+        [dmin, const_indx] = min(abs(r(indx) - constel));
+        sest(indx) = constel(const_indx);
+    <span class="keyword">end</span>
+    SER = (nnz(s-sest)/N);
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Lab1ECEN310Q3_06.png" alt=""> <img vspace="5" hspace="5" src="Lab1ECEN310Q3_07.png" alt=""> <img vspace="5" hspace="5" src="Lab1ECEN310Q3_08.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+% David Dobbie : 300340161
+% ECEN 310 / ENGR 440 Communications Engineering
+% Lab 1 - Bit Error Rate
+
+clear all; clc;
+set(0, 'defaulttextInterpreter','latex')
+%%Q3:
+% how timing offset impacts the SER performance
+
+
+
+N = 10;
+
+s = zeros(N,1);
+n = zeros(N,1);
+r = zeros(N,1);
+sest = zeros(N,1);
+Es = 1;
+
+%% a) generate raised cosine pulse
+% The raised cosine pulse lies from 0 to 64 since it is not possible to
+% implement a non-causal filter. This will lead an offset in symbols that
+% need to be accounted for.
+
+b =0.5;
+D = 2;
+Rs = 16;
+T = 1;
+
+
+
+
+
+SNRdB_axis = 0:5:15;
+M =2;
+constel = exp((j * 2* pi * (0:M-1))/ (M));
+
+rc = rcosfir(b,D,Rs,T);
+rc_axis = -D*Rs:D*Rs;
+figure(1)
+stem(rc);
+title('Raised Cosine Pulse filter')
+xlabel('Time')
+ylabel('Pulse Amplitude')
+
+%% b)
+figure(2)
+
+rng(6);
+s = real(randsrc(N,1,constel)); % get rnd symbols, tx
+n = 0;
+r = s + n; % rx
+
+x = upsample(s,Rs); % simulate filter sampled at Ts = T/Rs
+y = filter(rc,1,x); %pass upsampled data through raised cosine filter
+
+subplot(2,1,2)
+stem(y);
+title('Upsampled Data Stream')
+xlabel('Time')
+ylabel('Pulse Amplitude') 
+
+subplot(2,1,1)
+stem(s);
+title('Original Data Stream')
+xlabel('Time')
+ylabel('Pulse Amplitude') 
+
+
+%% c) Sampling the filtered data
+% This demonstrates the sampling of filtered data through a raised cosine
+% pulse. There is no noise in this initialisation.
+Te_axis = [1 2 4]; %timing error
+figure(3)
+for indx = 1:length(Te_axis)
+        Te = Te_axis(indx); % timing error
+
+        s = real(randsrc(N,1,constel)); % get rnd symbols, tx
+        n = 0;
+        
+        x = upsample(s,Rs); % simulate filter sampled at Ts = T/Rs
+        y = filter(rc,1,x); %pass upsampled data through raised cosine filter
+        z = downsample(y,Rs,Te_axis(indx)); % the receiver, no noise
+        
+        
+        
+        subplot(3,1,indx)
+        stem(z);
+        title(['Timing offset, $ T_e$ = ' num2str(Te)])
+        xlabel('Time')
+        ylabel('Pulse Amplitude') 
+
+end
+
+%% d)e) add D extra symbols and remove D at end
+% This is done to align the sent bits with their corresponding mapped
+% received bits. This allows for analysis of it.
+Ns = N + D;
+
+Te_axis = [0 1 2 4]; %timing error
+figure(4)
+for indx = 1:length(Te_axis)
+        Te = Te_axis(indx); % timing error
+
+        s = real(randsrc(Ns,1,constel)); % get rnd symbols, tx
+        n = 0;
+
+        x = upsample(s,Rs); % simulate filter sampled at Ts = T/Rs
+        s_ups = filter(rc,1,x); %pass upsampled data through raised cosine filter
+        
+        s_ups=s_ups;
+
+        r = downsample(s_ups+n,Rs,Te); % received section
+        
+        
+        r = r(1+D:end); % strip D bits at start
+        s = s(1:end-D); % strip D bits at end
+        
+        
+        subplot(4,1,indx)
+        hold on
+        stem(s,  'filled', 'linewidth', 5, 'Color', 'blue');
+        stem(r, 'linewidth', 1.5, 'Color', 'cyan');       
+        hold off
+        ylim([-2 2]);
+        xlim([0 14]);
+        title(['Timing offset, $ T_e$ = ' num2str(Te)])
+        xlabel('Time')
+        ylabel('Amplitude') 
+        leg = legend('Sent','Received');
+
+end
+
+%% f) add AWGN noise to the simulation
+% AWGN is added to the signal. It is not complex here as there is only one
+% dimension to set the decision points. We see in comparison to the
+% previous figure that noise has come into effect on the system.
+Ns = N + D;
+Es = 1;
+
+SNRdB = 5;
+
+Te_axis = [0 1 2 4]; %timing error
+figure(5)
+for indx = 1:length(Te_axis)
+    
+        No = Es/db2pow(SNRdB);
+        
+        rng(6);
+        Te = Te_axis(indx); % timing error
+        
+        n = sqrt(No/2)*randn(Ns,1); % noise samples
+
+        s = real(randsrc(Ns,1,constel)); % get rnd symbols, tx
+        
+        s_tx = s + n;
+        
+        x = upsample(s_tx,Rs); % simulate filter sampled at Ts = T/Rs
+        s_ups = filter(rc,1,x); %pass upsampled data through raised cosine filter
+        
+
+       
+        r = downsample(s_ups,Rs,Te); % received section
+        
+        
+        r = r(1+D:end); % strip D bits at start
+        s = s(1:end-D); % strip D bits at end
+        
+        
+        subplot(4,1,indx)
+        hold on
+        stem(s,  'filled', 'linewidth', 5, 'Color', 'blue');
+        stem(r, 'linewidth', 1.5, 'Color', 'cyan');       
+        hold off
+        ylim([-2 2]);
+        xlim([0 14]);
+        title(['Timing offset, $ T_e$ = ' num2str(Te)])
+        xlabel('Time')
+        ylabel('Amplitude') 
+        leg = legend('Sent','Received');
+
+end
+
+
+%% g,h)
+% We see that larger timing errors lead to larger symbol error rates.
+
+SNRdBAxis = -4:2:8;
+TeAxis = [0 1 2 4];
+SERresults = zeros(length(SNRdBAxis), length(TeAxis));
+M_Axis = [2 4 8];
+
+Ns = 1e4;
+
+% loop through and test different M-ary schemes
+for M_indx = 1:length(M_Axis)
+    M = M_Axis(M_indx);
+    for p = 1:length(SNRdBAxis)
+        for q = 1:length(TeAxis)
+            SNRdB_val = SNRdBAxis(p);
+            Te = TeAxis(q);
+            SERresults(p,q) = getSER(M, Ns, SNRdB_val, Te, Rs, D, rc);
+        end
+    end
+
+    % plotting system 
+    figure(5 + M_indx);
+    hold on
+    grid on
+    ax = gca;
+    semilogy(SNRdBAxis ,SERresults,'linewidth', 1.5)
+    ax.ColorOrderIndex = 1;
+
+    set(ax,'yscale','log')
+
+    hold off
+
+    xlabel("$ SNR_{dB} $")
+    ylabel("Symbol Error Rate (SER)")
+    str = sprintf('Comparison of Timing Error for %c-ary PSK', (num2str(M)));
+    title(str);
+    lgnd = legend('$T_e = 0$','$T_e = \frac{T}{16}$','$T_e = \frac{T}{8}$', ...
+        '$T_e = \frac{T}{4}$');
+    lgnd.Location = 'southwest';
+    set(lgnd,'FontSize',10)
+    set(lgnd,'Interpreter','latex')
+end
+
+% Functions:
+% get SER function
+% Inputs: M - number of decision points; Ns - number of data points
+% simulated; SNRdB - SNRdB being tested; phaseError for phase error
+% introduced
+% Outputs: SER
+
+% get SER function
+% Inputs: M - number of decision points; Ns - number of data points
+% simulated; SNRdB - SNRdB being tested; Te - timing error causing ISI;
+% Rs - symbol rate
+% Outputs: SER
+
+function SER = getSER(M, N, SNRdB, Te, Rs, D, rc);
+    constel = exp((j * 2* pi * (0:M-1))/ (M));
+    
+    Ns = N + D;
+    
+    Es = 1;
+    
+    No = Es/db2pow(SNRdB);
+
+    s = randsrc(Ns,1,constel); % get rnd symbols, tx
+    n = sqrt(No/2)*complex(randn(Ns,1),randn(Ns,1)); % noise samples
+    
+    % simulating timing error
+    s_tx = s + n;
+    x = upsample(s_tx,Rs); % simulate filter sampled at Ts = T/Rs
+    s_ups = filter(rc,1,x); %pass upsampled data through raised cosine filter
+    r = downsample(s_ups,Rs,Te); % received section
+    r = r(1+D:end); % strip D bits at start
+    s = s(1:end-D); % strip D bits at end
+    
+    
+    sest = zeros(N,1);
+
+    for indx = 1:N
+        %returns decision point closest to the received message
+        [dmin, const_indx] = min(abs(r(indx) - constel)); 
+        sest(indx) = constel(const_indx);
+    end
+    SER = (nnz(s-sest)/N);
+end
+##### SOURCE END #####
+--></body></html>

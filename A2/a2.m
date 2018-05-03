@@ -12,7 +12,7 @@ set(0, 'defaulttextInterpreter','latex')
 constel = [-3 -1 1 3]  % init signal constell
 M = 4;
 
-N = 1e5;
+N = 1e7;
 
 
 
@@ -88,25 +88,19 @@ analytData(:,2) = 2*analytData(:,2); %convert to BER
 loglog(analytData(:,1), analytData(:,2),'LineWidth',3);
 
 % plots the union bound accounding to the min distance approx
+
+mindist = Es *2; %due to M-ary PAM around centre
 iter = 1;
-unionBoundData = zeros(num_tests,2);
+unionBoundQFunc = zeros(num_tests,2);
 for SNRdB = logspace(0,2,num_tests)
     No = Es/db2pow(SNRdB);
-    unionBoundSER = 0;
-    for  M_other = 1:length(constel)
-        for indx = 1:length(constel)
-            if (indx ~= M_other) 
-                dist = abs(constel(indx) - constel(M_other));
-                unionBoundSER = unionBoundSER + qfunc(dist/(sqrt(2*No)));
-            end
-        end
-    end
-    unionBoundData(iter, :) = [SNRdB unionBoundSER];
+    unionQfuncSER = (M-1)* qfunc(mindist/sqrt(2*No)); 
+    unionQfuncBER = 2*unionQfuncSER;
+    unionBoundQFunc(iter, :) = [SNRdB unionQfuncSER];
     iter = iter + 1;
 end
-unionBoundData(:,2) = 2*unionBoundData(:,2);
-
-loglog(unionBoundData(:,1), unionBoundData(:,2),'LineWidth',3);
+unionBoundQFunc(:,2) = 2*unionBoundQFunc(:,2); %convert to BER
+loglog(unionBoundQFunc(:,1), unionBoundQFunc(:,2),'LineWidth',3);
 
 
 
@@ -114,19 +108,19 @@ loglog(unionBoundData(:,1), unionBoundData(:,2),'LineWidth',3);
 
 mindist = Es *2; %due to M-ary PAM around centre
 iter = 1;
-unionQfuncData = zeros(num_tests,2);
+unionBoundQFuncApprox = zeros(num_tests,2);
 for SNRdB = logspace(0,2,num_tests)
     No = Es/db2pow(SNRdB);
-    unionQfuncSER = (M-1)* qfunc(mindist/sqrt(2*No)); 
+    unionQfuncSER = ((M-1)/2) * exp(-(mindist^2)/(4*No)) ;
     unionQfuncBER = 2*unionQfuncSER;
-    unionQfuncData(iter, :) = [SNRdB unionQfuncSER];
+    unionBoundQFuncApprox(iter, :) = [SNRdB unionQfuncSER];
     iter = iter + 1;
 end
-unionQfuncData(:,2) = 2*unionQfuncData(:,2); %convert to BER
-loglog(unionQfuncData(:,1), unionQfuncData(:,2),'LineWidth',3);
+unionBoundQFuncApprox(:,2) = 2*unionBoundQFuncApprox(:,2); %convert to BER
+loglog(unionBoundQFuncApprox(:,1), unionBoundQFuncApprox(:,2),'LineWidth',3);
 
 hold off
-lgnd = legend('Sim. $ P_m $' , 'Analytical Exp.', 'Union bound min dist.', 'Union bound min dist. and Q func.')
+lgnd = legend('Simulated $ P_m $' , 'Analytical Expression', 'Union bound min dist.', 'Union bound min dist. approx')
 lgnd.Location = 'southwest';
 set(lgnd,'Interpreter','latex')
 

@@ -1,0 +1,428 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>Lab1ECEN310Q2</title><meta name="generator" content="MATLAB 9.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-05-03"><meta name="DC.source" content="Lab1ECEN310Q2.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">David Dobbie : 300340161</a></li><li><a href="#2">Q2:</a></li><li><a href="#3">2a</a></li><li><a href="#4">2b,2c</a></li><li><a href="#5">2d</a></li></ul></div><h2 id="1">David Dobbie : 300340161</h2><p>ECEN 310 / ENGR 440 Communications Engineering Lab 1 - Bit Error Rate</p><pre class="codeinput">clear <span class="string">all</span>; clc;
+</pre><h2 id="2">Q2:</h2><pre class="codeinput">set(0, <span class="string">'defaulttextInterpreter'</span>,<span class="string">'latex'</span>)
+
+M_vect = [2 8];
+phi_err = [pi/16 pi/8];
+SNRdB = 5;
+Es = 1;
+N = 1e3;
+
+iter =1;
+</pre><h2 id="3">2a</h2><p>Here we examine the performance of a MPSK system to varying amounts of phase error. We see that as the phase error is increased, the distribution of the sent points rotate around the origin. This is exacerbated for 8PSK as the phase error directly pushes the sent symbols to the wrong decision points. This is because PSK only makes the differentation of each received symbol with its phase, not its energy.</p><pre class="codeinput">figure(1)
+<span class="keyword">for</span> M_indx = 1:length(M_vect)
+    M = M_vect(M_indx);
+    constel = exp((j * 2* pi * (0:M-1))/ (M));
+
+    <span class="keyword">for</span> phiIndx = 1:length(phi_err);
+        phi = phi_err(phiIndx);
+        No = Es/db2pow(SNRdB);
+
+        s = randsrc(N,1,constel); <span class="comment">% get rnd symbols, tx</span>
+        n = sqrt(No/2)*complex(randn(N,1),randn(N,1)); <span class="comment">% noise samples</span>
+        r = s * exp(j*phi) + n; <span class="comment">% rx</span>
+
+        <span class="keyword">for</span> indx = 1:N
+            <span class="comment">%returns decision point closest to the received message</span>
+            [dmin, const_indx] = min(abs(r(indx) - constel));
+            sest(indx) = constel(const_indx);
+        <span class="keyword">end</span>
+
+        <span class="comment">% plotting system</span>
+
+        subplot(2,2,iter)
+
+        hold <span class="string">on</span>
+        plot(real(r)', imag(r)', <span class="string">'b.'</span>)
+        plot(real(constel)', imag(constel)', <span class="string">'r+'</span>, <span class="string">'linewidth'</span>, 2, <span class="string">'markersize'</span> , 8)
+        hold <span class="string">off</span>
+
+        ax = gca;
+        ax.XAxisLocation = <span class="string">'origin'</span>;
+        ax.YAxisLocation = <span class="string">'origin'</span>;
+        axis([-2 2 -2 2])
+        grid <span class="string">on</span>
+
+        xlabel(<span class="string">'$ \psi_1 (t)$'</span>)
+        ylabel(<span class="string">'$ \psi_2 (t)$'</span>)
+
+        <span class="keyword">if</span> phiIndx == 1
+            title([num2str(M)  <span class="string">'-ary PSK $SNR_{dB}=5$ $\phi_e  = \frac{\pi}{16} $'</span>])
+        <span class="keyword">end</span>
+        <span class="keyword">if</span> phiIndx == 2
+            title([num2str(M)  <span class="string">'-ary PSK $SNR_{dB}=5$ $ \phi_e  = \frac{\pi}{8} $'</span>])
+        <span class="keyword">end</span>
+        iter = iter + 1;
+    <span class="keyword">end</span>
+
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Lab1ECEN310Q2_01.png" alt=""> <h2 id="4">2b,2c</h2><p>We see with the SER plot that the higher the phase error, the more higher the SER is. This matches closely with the theoretical SER for them. Each Monte Carlo simulation is generated with <img src="Lab1ECEN310Q2_eq08565322634308188967.png" alt="$N = 10^{5}$"> symbols.</p><pre class="codeinput"><span class="comment">% SER error rates:</span>
+
+SNRdBAxis = -4:2:8;
+SNRdBAxis_theo = -4:0.25:8;
+phiAxis = [0 pi/32 pi/16 pi/8];
+Ns = 1e5;
+figure(2)
+
+generalSERPlotGen(SNRdBAxis, SNRdBAxis_theo, phiAxis, Ns, 2)
+
+figure(3)
+generalSERPlotGen(SNRdBAxis, SNRdBAxis_theo, phiAxis, Ns, 8)
+
+
+<span class="comment">% get SER function</span>
+<span class="comment">% Inputs: M - number of decision points; Ns - number of data points</span>
+<span class="comment">% simulated; SNRdB - SNRdB being tested; phaseError for phase error</span>
+<span class="comment">% introduced</span>
+<span class="comment">% Outputs: SER</span>
+
+<span class="keyword">function</span> SER = getSER(M, Ns, SNRdB, phaseError);
+    constel = exp((j * 2* pi * (0:M-1))/ (M));
+    Es = 1;
+
+    No = Es/db2pow(SNRdB);
+
+    s = randsrc(Ns,1,constel); <span class="comment">% get rnd symbols, tx</span>
+    n = sqrt(No/2)*complex(randn(Ns,1),randn(Ns,1)); <span class="comment">% noise samples</span>
+    r = s * exp(j*phaseError) + n; <span class="comment">% rx</span>
+    sest = zeros(Ns,1);
+
+    <span class="keyword">for</span> indx = 1:Ns
+        <span class="comment">%returns decision point closest to the received message</span>
+        [dmin, const_indx] = min(abs(r(indx) - constel));
+        sest(indx) = constel(const_indx);
+    <span class="keyword">end</span>
+    SER = (nnz(s-sest)/Ns);
+<span class="keyword">end</span>
+
+<span class="comment">%</span>
+<span class="comment">% Give an SER with a set phase error</span>
+<span class="comment">% to compare</span>
+<span class="comment">%</span>
+<span class="comment">%</span>
+<span class="keyword">function</span> [SERtheo SERresults] = generalSERPlotGen(SNRdBAxis, SNRdBtheo_axis, phiAxis, Ns, M);
+    SERresults = zeros(length(SNRdBAxis), length(phiAxis));
+
+    <span class="comment">% loop through and test different M-ary schemes PSK</span>
+    <span class="keyword">for</span> p = 1:length(SNRdBAxis)
+        <span class="keyword">for</span> q = 1:length(phiAxis)
+            SNRdB_val = SNRdBAxis(p);
+            phi_val = phiAxis(q);
+            SERresults(p,q) = getSER(M, Ns, SNRdB_val, phi_val);
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+    <span class="keyword">if</span> M == 2 <span class="comment">%only make theoretical for BPSK</span>
+        SER_theo = zeros(length(SNRdBtheo_axis), length(phiAxis));
+
+        <span class="comment">% loop through and test different theoretical M-ary schemes PSK</span>
+        <span class="keyword">for</span> p = 1:length(SNRdBtheo_axis)
+            <span class="keyword">for</span> q = 1:length(phiAxis)
+                SNRlin_val = db2pow(SNRdBtheo_axis(p));
+                phi_val = phiAxis(q);
+                argu = cos(phi_val)*sqrt( ( 2*SNRlin_val));
+                SER_theo(p,q) =qfunc(argu);
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+
+    <span class="comment">% plot SER results</span>
+
+    hold <span class="string">on</span>
+    grid <span class="string">on</span>
+    ax = gca;
+    semilogy(SNRdBAxis ,SERresults,<span class="string">'linewidth'</span>, 1.5)
+    ax.ColorOrderIndex = 1;
+    <span class="keyword">if</span> M == 2
+        semilogy(SNRdBtheo_axis ,SER_theo,<span class="string">'--'</span>,<span class="string">'linewidth'</span>, 2)
+    <span class="keyword">end</span>
+
+    set(ax,<span class="string">'yscale'</span>,<span class="string">'log'</span>)
+
+    hold <span class="string">off</span>
+
+    xlabel(<span class="string">"$ SNR_{dB} $"</span>)
+    ylabel(<span class="string">"Symbol Error Rate (SER)"</span>)
+    str = sprintf(<span class="string">'Comparison of Different Phase Errors for %c-ary PSK'</span>, (num2str(M)));
+    title(str);
+    <span class="keyword">if</span> M == 2
+    leg_str  = {<span class="string">'$\phi_e = 0$ Sim.'</span>,<span class="string">'$\phi_e = \frac{\pi}{32}$ Sim.'</span>, <span class="keyword">...</span>
+        <span class="string">'$\phi_e = \frac{\pi}{16}$ Sim.'</span>,<span class="string">'$\phi_e = \frac{\pi}{8}$ Sim.'</span>, <span class="keyword">...</span>
+        <span class="string">'$\phi_e = 0$ Theo.'</span>,<span class="string">'$\phi_e = \frac{\pi}{32}$ Theo.'</span>, <span class="keyword">...</span>
+        <span class="string">'$\phi_e = \frac{\pi}{16}$ Theo.'</span>,<span class="string">'$\phi_e = \frac{\pi}{8}$ Theo.'</span>};
+    <span class="keyword">else</span>
+    leg_str  = {<span class="string">'$\phi_e = 0$ Sim.'</span>,<span class="string">'$\phi_e = \frac{\pi}{32}$ Sim.'</span>, <span class="keyword">...</span>
+        <span class="string">'$\phi_e = \frac{\pi}{16}$ Sim.'</span>,<span class="string">'$\phi_e = \frac{\pi}{8}$ Sim.'</span>};
+    <span class="keyword">end</span>
+
+    lgnd = legend(leg_str,<span class="string">'FontSize'</span>, 10);
+    lgnd.Location = <span class="string">'southwest'</span>;
+    set(lgnd,<span class="string">'Interpreter'</span>,<span class="string">'latex'</span>)
+    <span class="keyword">return</span>;
+<span class="keyword">end</span>
+</pre><img vspace="5" hspace="5" src="Lab1ECEN310Q2_02.png" alt=""> <img vspace="5" hspace="5" src="Lab1ECEN310Q2_03.png" alt=""> <h2 id="5">2d</h2><p>We see that for 8PSK, the error levels out at a phase error of <img src="Lab1ECEN310Q2_eq05572392948261740795.png" alt="$\pi/8$">. This is due to the phase error being larger than the mid point of each phasdecision point for each ;point. Each point is separated by <img src="Lab1ECEN310Q2_eq07548486152348456294.png" alt="$\pi/4$"> radians. That means if there is a bias of more than <img src="Lab1ECEN310Q2_eq05572392948261740795.png" alt="$\pi/8$">, the mean of the sent symbols will be in the wrong decision area. Increasing SNR will not lead to a decrease in error because of this.</p><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% David Dobbie : 300340161
+% ECEN 310 / ENGR 440 Communications Engineering
+% Lab 1 - Bit Error Rate
+
+clear all; clc;
+
+%% Q2:
+
+
+
+set(0, 'defaulttextInterpreter','latex')
+
+M_vect = [2 8];
+phi_err = [pi/16 pi/8];
+SNRdB = 5;
+Es = 1;
+N = 1e3;
+
+iter =1;
+%% 2a
+% Here we examine the performance of a MPSK system to varying amounts of
+% phase error. We see that as the phase error is increased, the
+% distribution of the sent points rotate around the origin. This is
+% exacerbated for 8PSK as the phase error directly pushes the sent symbols
+% to the wrong decision points. This is because PSK only makes the
+% differentation of each received symbol with its phase, not its energy.
+
+figure(1)
+for M_indx = 1:length(M_vect)
+    M = M_vect(M_indx);
+    constel = exp((j * 2* pi * (0:M-1))/ (M));
+
+    for phiIndx = 1:length(phi_err);
+        phi = phi_err(phiIndx);
+        No = Es/db2pow(SNRdB);
+
+        s = randsrc(N,1,constel); % get rnd symbols, tx
+        n = sqrt(No/2)*complex(randn(N,1),randn(N,1)); % noise samples
+        r = s * exp(j*phi) + n; % rx
+
+        for indx = 1:N
+            %returns decision point closest to the received message
+            [dmin, const_indx] = min(abs(r(indx) - constel)); 
+            sest(indx) = constel(const_indx);
+        end
+
+        % plotting system
+        
+        subplot(2,2,iter)
+
+        hold on
+        plot(real(r)', imag(r)', 'b.')
+        plot(real(constel)', imag(constel)', 'r+', 'linewidth', 2, 'markersize' , 8)
+        hold off
+
+        ax = gca;
+        ax.XAxisLocation = 'origin';
+        ax.YAxisLocation = 'origin';
+        axis([-2 2 -2 2])
+        grid on
+
+        xlabel('$ \psi_1 (t)$')
+        ylabel('$ \psi_2 (t)$')
+
+        if phiIndx == 1
+            title([num2str(M)  '-ary PSK $SNR_{dB}=5$ $\phi_e  = \frac{\pi}{16} $'])
+        end
+        if phiIndx == 2
+            title([num2str(M)  '-ary PSK $SNR_{dB}=5$ $ \phi_e  = \frac{\pi}{8} $'])
+        end
+        iter = iter + 1;
+    end
+    
+end
+
+%% 2b,2c
+% We see with the SER plot that the higher the phase error, the more higher
+% the SER is. This matches closely with the theoretical SER for them. Each
+% Monte Carlo simulation is generated with $N = 10^{5}$ symbols.
+
+% SER error rates:
+
+SNRdBAxis = -4:2:8;
+SNRdBAxis_theo = -4:0.25:8;
+phiAxis = [0 pi/32 pi/16 pi/8];
+Ns = 1e5;
+figure(2)
+
+generalSERPlotGen(SNRdBAxis, SNRdBAxis_theo, phiAxis, Ns, 2)
+
+figure(3)
+generalSERPlotGen(SNRdBAxis, SNRdBAxis_theo, phiAxis, Ns, 8)
+
+
+% get SER function
+% Inputs: M - number of decision points; Ns - number of data points
+% simulated; SNRdB - SNRdB being tested; phaseError for phase error
+% introduced
+% Outputs: SER
+
+function SER = getSER(M, Ns, SNRdB, phaseError);
+    constel = exp((j * 2* pi * (0:M-1))/ (M));
+    Es = 1;
+    
+    No = Es/db2pow(SNRdB);
+
+    s = randsrc(Ns,1,constel); % get rnd symbols, tx
+    n = sqrt(No/2)*complex(randn(Ns,1),randn(Ns,1)); % noise samples
+    r = s * exp(j*phaseError) + n; % rx
+    sest = zeros(Ns,1);
+
+    for indx = 1:Ns
+        %returns decision point closest to the received message
+        [dmin, const_indx] = min(abs(r(indx) - constel)); 
+        sest(indx) = constel(const_indx);
+    end
+    SER = (nnz(s-sest)/Ns);
+end
+
+%
+% Give an SER with a set phase error
+% to compare
+%
+% 
+function [SERtheo SERresults] = generalSERPlotGen(SNRdBAxis, SNRdBtheo_axis, phiAxis, Ns, M);
+    SERresults = zeros(length(SNRdBAxis), length(phiAxis));
+
+    % loop through and test different M-ary schemes PSK
+    for p = 1:length(SNRdBAxis)
+        for q = 1:length(phiAxis)
+            SNRdB_val = SNRdBAxis(p);
+            phi_val = phiAxis(q);
+            SERresults(p,q) = getSER(M, Ns, SNRdB_val, phi_val);
+        end
+    end
+    if M == 2 %only make theoretical for BPSK
+        SER_theo = zeros(length(SNRdBtheo_axis), length(phiAxis));
+
+        % loop through and test different theoretical M-ary schemes PSK
+        for p = 1:length(SNRdBtheo_axis)
+            for q = 1:length(phiAxis)
+                SNRlin_val = db2pow(SNRdBtheo_axis(p));
+                phi_val = phiAxis(q);
+                argu = cos(phi_val)*sqrt( ( 2*SNRlin_val));
+                SER_theo(p,q) =qfunc(argu);
+            end
+        end
+    end
+
+
+    % plot SER results
+    
+    hold on
+    grid on
+    ax = gca;
+    semilogy(SNRdBAxis ,SERresults,'linewidth', 1.5)
+    ax.ColorOrderIndex = 1;
+    if M == 2
+        semilogy(SNRdBtheo_axis ,SER_theo,'REPLACE_WITH_DASH_DASH','linewidth', 2)
+    end
+    
+    set(ax,'yscale','log')
+
+    hold off
+
+    xlabel("$ SNR_{dB} $")
+    ylabel("Symbol Error Rate (SER)")
+    str = sprintf('Comparison of Different Phase Errors for %c-ary PSK', (num2str(M)));
+    title(str);
+    if M == 2
+    leg_str  = {'$\phi_e = 0$ Sim.','$\phi_e = \frac{\pi}{32}$ Sim.', ...
+        '$\phi_e = \frac{\pi}{16}$ Sim.','$\phi_e = \frac{\pi}{8}$ Sim.', ...
+        '$\phi_e = 0$ Theo.','$\phi_e = \frac{\pi}{32}$ Theo.', ...
+        '$\phi_e = \frac{\pi}{16}$ Theo.','$\phi_e = \frac{\pi}{8}$ Theo.'};
+    else
+    leg_str  = {'$\phi_e = 0$ Sim.','$\phi_e = \frac{\pi}{32}$ Sim.', ...
+        '$\phi_e = \frac{\pi}{16}$ Sim.','$\phi_e = \frac{\pi}{8}$ Sim.'};        
+    end
+        
+    lgnd = legend(leg_str,'FontSize', 10);
+    lgnd.Location = 'southwest';
+    set(lgnd,'Interpreter','latex')
+    return;
+end
+
+%% 2d
+% We see that for 8PSK, the error levels out at a phase error of $\pi/8$.
+% This is due to the phase error being larger than the mid point of each
+% phasdecision point for each ;point. Each point is separated by $\pi/4$
+% radians. That means if there is a bias of more than $\pi/8$, the mean
+% of the sent symbols will be in the wrong decision area. Increasing SNR
+% will not lead to a decrease in error because of this.
+
+
+
+##### SOURCE END #####
+--></body></html>
