@@ -1,6 +1,7 @@
 %% David Dobbie 300340161
 % ECEN 310 Assignment 3, Question 3
 
+close all;
 clear all;
 clc;
 clf;
