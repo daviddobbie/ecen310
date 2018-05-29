@@ -1,25 +1,43 @@
 
 clear all
-close all
-clf
 clc 
 
-SNRdB = 0:1:10;
-
-SNRlin = 10.^(SNRdB./10)
 
 
-BER_orig = 2*qfunc(sqrt(2* SNRlin))
+set(0,'defaulttextInterpreter','latex')
 
-BER_new = 1 - sqrt(SNRlin./(1+SNRlin))
+EGC = 1 + pi/4;
+SC = 3/2;
+MRC = 2;
+
+b= 0: 0.1 : 5;
+
+
+meanSNR = [1 2.5 5];
+
+
+
+
+
+
 
 
 figure(1)
+clf
+
 hold on
-loglog(SNRdB, BER_orig)
-loglog(SNRdB, BER_new)
-set(gca, 'YScale', 'log')
-set(gca, 'XScale', 'log')
+SSC = 1 + exp(-b).*( meanSNR(1) + b  -1);
+plot(b,SSC)
+plot([0 max(b)], [EGC EGC]);
+plot([0 max(b)], [SC SC]);
+plot([0 max(b)], [MRC MRC]);
 hold off
 
 
+xlabel('$\frac{\gamma_T}{\bar{\gamma}}$ Threshold-Mean Ratio')
+ylabel('Combined Gain $\frac{\bar{\gamma_{C}}}{\bar{\gamma}}$')
+
+lgf = legend('SSC $\bar{\gamma} =1$', 'EGC','SC','MRC');
+set(lgf,'Interpreter','latex');
+
+ylim([1 2.5])
