@@ -61,13 +61,13 @@ capacity_macro = log2(1 + SINR_macro);
 
 
 
-capacity_macro = generateCM(100, 0, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
-capacityM_femto5 =  generateCM(100, 5, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
-capacityM_femto100 =  generateCM(100, 100, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
-capacityM_femto300 =  generateCM(100, 300, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
+capacity_macro = generateCM(1000, 0, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
+capacityM_femto5 =  generateCM(1000, 5, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
+capacityM_femto100 =  generateCM(1000, 100, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
+capacityM_femto300 =  generateCM(1000, 300, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
 
 
-capacityF_femto5 =  generateFM(10, 5, R, R_o, r_f, sigma_sfdB, SNR_targetdB, ...
+capacityF_femto5 =  generateFM(1000, 5, R, R_o, r_f, sigma_sfdB, SNR_targetdB, ...
          SNR_maxdB,  pathloss_m, NodB, WdB, p_act, p_ind);
 
 
@@ -154,9 +154,8 @@ function [capacity] = generateCM(macro_userDens, femto_Dens, R , R_outRange, r_f
             P_rx(idx) = db2pow(SNR_maxdB + NodB) ;
         end 
     end
-
     I = 0; %femto macro interference
-    
+    %pow2db(P_tx)
     % add in femto interference to the macro user
     if N_femto > 0
       for idx = 1:N_femto
@@ -170,14 +169,13 @@ function [capacity] = generateCM(macro_userDens, femto_Dens, R , R_outRange, r_f
                 + 10*pathloss_m*log10((2/3)*r_femto) + NodB); %compute mean dist as 2/3 radius
             L_femto = db2pow((sigma_sfdB)*randn(N,1)); %lognormal shadowing
             P_rx_femto = (P_tx_femto .* dist_from_femto.^(-pathloss_m) .* L_femto) / db2pow(wallLossdB);
-            
+             %pow2db(P_tx_femto)
             % maxes out received power from the femto for each user to 20dB
             for idx = 1:length(P_rx_femto)
                 if pow2db(P_rx_femto(idx)) - NodB > SNR_maxdB
                     P_rx_femto(idx) = db2pow(SNR_maxdB + NodB) ;
                 end 
             end
-            
             rayleigh = (  abs(    sqrt(1/2) * ( randn(N,1) + 1j*randn(N,1) )    )  ).^2; %unit variance, zero mean
             % creates interference term with the received power from the
             % femto
@@ -205,162 +203,107 @@ end
 %% FEMTO USER CAPACITY
 function [capacity] = generateFM(macro_userDens, femto_Dens, R , R_outRange, r_femto, ...
     sigma_sfdB, SNR_targetdB, SNR_maxdB, pathloss_m ,NodB, wallLossdB, p_activity , p_indoor)
-    lambda_macro = macro_userDens * pi * (R*1e-3)^2; % convert to km
-    N = poissrnd(lambda_macro); % number users to simulate
-
-    
-    % generate macro average to set macro transmit power
-    magnitude = sqrt(abs(rand(N,1)*R^2));
-    bearing = 2*pi*(rand(N,1));
-    pos = magnitude .* exp(1i*bearing);
-
 
     lambda_femto = femto_Dens * pi * (R_outRange*1e-3)^2; % convert to km
     N_femto = poissrnd(lambda_femto); % number users to simulate
+    
+    Nusr = 100;
+    
     
     % generate femtos
     magnitude_femto = sqrt(abs(rand(N_femto,1)*R_outRange^2));
     bearing_femto = 2*pi*(rand(N_femto,1));
     pos_femto = magnitude_femto .* exp(1i*bearing_femto);
    
-    %{
-    % generate femto users
-    magnitude_femto_user = sqrt(abs(rand(N_femto,1)*r_femto^2));
-    bearing_femto_user = 2*pi*(rand(N_femto,1));
-    pos_fromFC_femto_user = magnitude_femto_user .* exp(1i*bearing_femto_user);
     
-    pos_femto_user = pos_fromFC_femto_user + pos_femto; %adds in position relative to macro (our origin)
     
-    magnitude_FU_from_macro = abs(pos_femto_user);
+    % generate femto users - this number of users under each femto cell
+    magnitude_femto_user = sqrt(abs(rand(Nusr,1)*r_femto^2));
+    bearing_femto_user = 2*pi*(rand(Nusr,1));
+    pos_femto_user = magnitude_femto_user .* exp(1i*bearing_femto_user);   
+    femto_user_inside = randsrc(Nusr,1,([1 0]));  
     
-    isInside = [1 0];
-    isFUInside = randsrc(N_femto ,1, isInside); % is the FU inside 0.5 prob    
-    %}
-    dm = magnitude;  %from macro to macro user
+    % ------------- generate each femto cell's transmit power
+    P_tx_femto_cell = db2pow(+SNR_targetdB    -   sigma_sfdB*qfuncinv(0.95) ...
+        + 10*pathloss_m*log10((2/3)*r_femto) + NodB); %compute mean dist as 2/3 radius    
+    % ------------- generate the macro transmit power
+    P_tx_macro = db2pow(+SNR_targetdB - sigma_sfdB*qfuncinv(0.975)  + 10*pathloss_m*log10(0.667*R) + NodB); %for macro signal strength
+    
+    
+    %generate SINR for each femto cell's femto users
+    SINR_femto_users = zeros(1, Nusr*N_femto);
 
     
-
-
-    SINR_femto_user = zeros(N_femto,1);
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    I = 0; %femto macro interference
-    % add in femto interference to the macro user
-%{
-      for FU_idx = 1:N_femto % for each femto user
-            FU_own_cell_P_rx = 0;
-
-            magnitude_femto_user = sqrt(abs(rand(N_femto,1)*r_femto^2));
-            bearing_femto_user = 2*pi*(rand(N_femto,1));
-            pos_fromFC_femto_user = magnitude_femto_user .* exp(1i*bearing_femto_user);
-
-            pos_femto_user = pos_fromFC_femto_user + pos_femto(; %adds in position relative to macro (our origin)
-
-            magnitude_FU_from_macro = abs(pos_femto_user);
-
-            isInside = [1 0];
-            isFUInside = randsrc(N_femto ,1, isInside); % is the FU inside 0.5 prob   
-
-
-            L = db2pow((sigma_sfdB)*randn(N_femto,1)); %lognormal shadowing
-
-            %------------ SETS TRANSMIT POWER ACCORDING TO eq 2
-            %sets transmit power macro such that mean macro SNR  meets threshold (eq 2)
-            P_tx_m = db2pow(+SNR_targetdB    -   sigma_sfdB*qfuncinv(0.95)  + 10*pathloss_m*log10(mean(dm)) + NodB) 
-            % caps received power for femto users
-            P_rx_m_to_fu = (P_tx_m .* magnitude_FU_from_macro.^(-pathloss_m) .* L);
-
-            % cap the macro transmit power of the macro to the femto user
-            for idx = 1:length(P_rx_m_to_fu)
-                if pow2db(P_rx_m_to_fu(idx)) - NodB > SNR_maxdB
-                    P_rx_m_to_fu(idx) = db2pow(SNR_maxdB + NodB) ;
-                end 
-            end
-
-
-                
-              
-            for idx_femto = 1:N_femto %for each femto
-                
- 
-    %{
-                figure(8)
-                clf
-                hold on
-                plot(real(pos_femto), imag(pos_femto), '+r')
-                plot(real(pos_femto_user), imag(pos_femto_user), '.g')
-                plot(0,0, '+k', 'MarkerSize', 20)
-                hold off
-      %}          
-                
-                pos_fromFC_femto_user = abs( pos_femto(idx_femto) - pos_femto_user(FU_idx));   % distance between femto user and the femto cell
-
-                % setting femto transmit power to attempt 95% connectivity within its
-                % range for received users
-                P_tx_femto_cell = db2pow(+SNR_targetdB    -   sigma_sfdB*qfuncinv(0.95) ...
-                    + 10*pathloss_m*log10((2/3)*r_femto) + NodB); %compute mean dist as 2/3 radius
-
-                L_femto = db2pow((sigma_sfdB)*randn(1,1)); %lognormal shadowing
-
-                P_rx_femto = (P_tx_femto_cell .* pos_fromFC_femto_user.^(-pathloss_m) ...
-                    .* L_femto) ./ db2pow(wallLossdB.*(isFUInside(FU_idx)+1));
-
-                %pow2db(P_rx_femto);
-                
-                % maxes out received power for each user to 20dB
-                for idx = 1:length(P_rx_femto)
-                    if pow2db(P_rx_femto(idx)) - NodB > SNR_maxdB
-                        P_rx_femto(idx) = db2pow(SNR_maxdB + NodB) ;
-                    end 
-                end
-                
-                figure(99)
-                clf
-                cdfplot(pow2db(P_rx_m_to_fu) - NodB)
-                
-
-                rayleigh = (  abs(    sqrt(1/2) * ( randn(1) + 1j*randn(1) )    )  ).^2; %unit variance, zero mean
-                % creates interference term with the received power from the
-                % femto
-                interfere_femto = (P_rx_femto .* rayleigh);
-
-                if(FU_idx == idx_femto) % if it is the femto that the FU is using, it is NOT interference
-                    FU_own_cell_P_rx = interfere_femto; % the femto users own femto
-                    interfere_femto = 0; 
-                end
-
-                I = I + interfere_femto;
-
-            end
-            rayleigh = (  abs(    sqrt(1/2) * ( randn(1) + 1j*randn(1) )    )  ).^2; %unit variance, zero mean
+    for cellIdx = 1:N_femto
+        % init users for single femto cell
+        users = pos_femto(cellIdx) + pos_femto_user;
             
-            macro_interfere = P_rx_m_to_fu(FU_idx) * abs(pos_femto_user(FU_idx)) * rayleigh *...
-                L(FU_idx) / db2pow(wallLossdB.*isFUInside(FU_idx));
-            macro_interfere = 0;
+        for usrIdx = 1:Nusr
+
             
-            SINR_femto_user(FU_idx) = FU_own_cell_P_rx./(db2pow(NodB) + I + macro_interfere);
-      end 
-    %}
-  
-  
-  
-    capacity = log2(1 + SINR_femto_user);
+            
+            %-------- COMPUTE FEMTO-to-FEMTO interference
+            
+            % removes the user's own femto cell from compared femtos
+            other_femto_pos = pos_femto;
+            other_femto_pos(cellIdx) = [];
+            
+            other_femto_dists = abs(users(usrIdx) - other_femto_pos);
+            
+            L = db2pow((sigma_sfdB)*randn(N_femto-1,1));
+            
+            h = (  abs(    sqrt(1/2) * ( randn(N_femto-1,1) + 1j*randn(N_femto-1,1) )    )  ).^2; %unit variance, zero mean
+            
+            I_femto_individ = P_tx_femto_cell .* other_femto_dists .^(-pathloss_m) ...
+                .* h  .* L ./ (db2pow(wallLossdB * (1+ femto_user_inside(usrIdx))));
+            
+            I_femto_inteference = sum(I_femto_individ);
+            
+            
+            %-------- COMPUTE MACRO interference
+            
+            user_dist_from_macro = abs(users(usrIdx) - [0]); % since macro is 0,0
+            
+            L = db2pow((sigma_sfdB)*randn(1,1));
+            
+            h = (  abs(    sqrt(1/2) * ( randn(1,1) + 1j*randn(1,1) )    )  ).^2;
+            
+            I_macro_interference = P_tx_macro .* user_dist_from_macro .^(-pathloss_m) ...
+                .* h  .* L ./ (db2pow(wallLossdB * femto_user_inside(usrIdx)));
+            
+            
+            %-------- COMPUTE SOURCE FEMTO RX POWER
+            
+            L = db2pow((sigma_sfdB)*randn(1,1));
+            h = (  abs(    sqrt(1/2) * ( randn(1,1) + 1j*randn(1,1) )    )  ).^2;
+            dist_user = abs(pos_femto_user(usrIdx));
+            P_rx_femto_user_longterm = P_tx_femto_cell * dist_user^(-pathloss_m) * L ...
+                * db2pow(wallLossdB * femto_user_inside(usrIdx)  ) ;
+            
+            %{
+            %need to cap femto SNR received to 20dB
+            if pow2db(P_rx_femto_user_longterm) - NodB > SNR_maxdB
+                P_rx_femto_user_longterm = db2pow(SNR_maxdB + NodB) ;
+            end 
+                %}
+            
+            P_rx_femto_user_instant = P_rx_femto_user_longterm * h;
+            
+            
+            %-------- add SINR to total results
+            SINR_single_femto_user = P_rx_femto_user_instant / (db2pow(NodB) +  I_femto_inteference ...
+                + I_macro_interference );
+            
+            SINR_femto_users(cellIdx* Nusr + usrIdx) = SINR_single_femto_user;
+            
+        end
+        
+        
+        
+        
+    end
+    
+    capacity = log2(1 + SINR_femto_users);
 end
 
 
