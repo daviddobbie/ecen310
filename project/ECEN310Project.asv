@@ -19,92 +19,164 @@ SNR_maxdB = 20;
 WdB = 10;
 NodB = 130;
 
-exampleData = csvread('example.csv');
+%{
+
 
 %------------ PLOTTING FIGURE 2
 
-N = 1e5; % number users to simulate
+mean_macro_user_density = 1000; %users per km^2
+lambda_macro = mean_macro_user_density * pi * (R*1e-3)^2 % convert to km
+N = poissrnd(lambda_macro) % number users to simulate
 
 %required power at d0= 1m is capped at 20dB SNR_mac_maxdB
+% generate macro users
+% randomly intialised polar coordinates
+magnitude = sqrt(abs(rand(N,1)*R^2));
+bearing = 2*pi*(rand(N,1));
+pos = magnitude .* exp(1i*bearing);
 
-d= sqrt(abs(rand(N,1)*R^2)); %randomly created d - macro user
+d= magnitude; %randomly created d - macro user
 L = db2pow((sigma_sfdB)*randn(N,1)); %lognormal shadowing
-
 
 %------------ SETS TRANSMIT POWER ACCORDING TO eq 2
 %sets transmit power such that mean macro SNR  meets threshold (eq 2)
-P_tx = db2pow(+SNR_targetdB    -   sigma_sfdB*qfuncinv(alpha)  + 10*pathloss_m*log10(mean(d)) + NodB) 
-
+P_tx = db2pow(+SNR_targetdB    -   sigma_sfdB*qfuncinv(0.975)  + 10*pathloss_m*log10(mean(d)) + NodB) 
 P_rx = (P_tx .* d.^(-pathloss_m) .* L);
-
-figure(9)
-clf
-cdfplot(pow2db(P_rx) - NodB)
-
-
 for idx = 1:length(P_rx)
     if pow2db(P_rx(idx)) - NodB > SNR_maxdB
         P_rx(idx) = db2pow(SNR_maxdB + NodB) ;
-        %P_tx(idx) = pow2db(SNR_maxdB + 10*pathloss_m*log10(mean(d)) - pow2db(mean(L)) + NodB);
     end 
 end
 
-
-
-
-figure(11)
-clf
-SNR_rx_dB = pow2db(P_rx) - NodB
-cdfplot(SNR_rx_dB)
-xlabel('Mean $SNR_m$')
-ylabel('cdf of mean $SNR_m$')
-title('')
-
 I = 0; %femto macro interference
-
 %rayleigh distribution on receiver
-rayleigh = (  abs(    sqrt(1/2) * ( rand(N,1) + 1j*rand(N,1) )    )  ).^2; %unit variance, zero mean
-%rayleigh =1;
-SINR_macro = P_rx.* rayleigh / (db2pow(NodB) + I); %instant rx power macro only
-
-
-figure(1)
-
-clf
-hold on
-cdfplot(pow2db(SINR_macro))
-xlim([0 60]);
-plot([0 60],[0.05 0.05], '--r')
-plot([10 10],[0 1], '--r')
-hold off
-xlabel('Instantenous for each macro user $SINR_m$')
-ylabel('cdf of $SINR_m$')
+rayleigh = (  abs(    sqrt(1/2) * ( randn(N,1) + 1j*randn(N,1) )    )  ).^2; %unit variance, zero mean
+SINR_macro_dB = pow2db(P_rx) + pow2db(rayleigh) - pow2db((db2pow(NodB) + I));
+SINR_macro = db2pow(SINR_macro_dB);
 
 capacity_macro = log2(1 + SINR_macro);
 
+%}
 
-figure(3)
+capacity_macro = generateCM(1000, 0, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
+
+capacityM_femto5 =  generateCM(1000, 300, R, R_o, r_f, sigma_sfdB, SNR_targetdB, SNR_maxdB,  pathloss_m, NodB, WdB);
+
+
+figure(2)
 clf
 hold on
 c = cdfplot(capacity_macro);
 c.Color = 'k';
 c.LineWidth = 2;
-plot(exampleData(:,1), exampleData(:,2),'LineWidth', 1.5)
+
+c = cdfplot(capacityM_femto5);
+c.Color = 'r';
+c.LineWidth = 2;
 
 hold off
-
 xlabel('C (bps/Hz)');
 ylabel('cdf of C');
 xlim([0 10]);
 title('')
 
 
-figure(1)
-hold on
-plot(pow2db(2.^exampleData(:,1) - 1), exampleData(:,2))
-hold off
+%% functions
+% inputs:
+% results: we find the capacity of each macro user due to macro and femto
+% inteference
+function [capacity] = generateCM(macro_userDens, femto_Dens, R , R_outRange, r_femto, ...
+    sigma_sfdB, SNR_targetdB, SNR_maxdB, pathloss_m ,NodB, wallLossdB)
+    lambda_macro = macro_userDens * pi * (R*1e-3)^2; % convert to km
+    N = poissrnd(lambda_macro); % number users to simulate
+    
+    lambda_femto = femto_Dens * pi * (R*1e-3)^2; % convert to km
+    N_femto = poissrnd(lambda_femto); % number users to simulate
 
+    %required power at d0= 1m is capped at 20dB SNR_mac_maxdB
+    % generate macro users
+    % randomly intialised polar coordinates
+    magnitude = sqrt(abs(rand(N,1)*R^2));
+    bearing = 2*pi*(rand(N,1));
+    pos = magnitude .* exp(1i*bearing);
 
-figure(4)
-histogram(pow2db(SINR_macro))
+    lambda_femto = femto_Dens * pi * (R_outRange*1e-3)^2; % convert to km
+    N_femto = poissrnd(lambda_femto); % number users to simulate
+    
+    
+    % generate femtos inside range
+    magnitude_femto = sqrt(abs(rand(N_femto,1)*R_outRange^2));
+    bearing_femto = 2*pi*(rand(N_femto,1));
+    pos_femto = magnitude_femto .* exp(1i*bearing_femto);
+    
+    % generate femtos outside range
+    
+    %{
+    magnitude_femto_outside = sqrt(abs(rand(N_femto,1)*R^2)) + (R_outRange - R);
+    bearing_femto_outside = 2*pi*(rand(N_femto,1));
+    pos_femto_outside = magnitude_femto_outside .* exp(1i*bearing_femto_outside);
+    
+    pos_femto = [pos_femto ;  pos_femto_outside ]
+%}
+    
+    figure(8)
+    clf
+    hold on
+    plot(real(pos), imag(pos), '.b')
+    plot(real(pos_femto), imag(pos_femto), '+r')
+    hold off
+    
+    dm= magnitude; %randomly created d - macro user
+    L = db2pow((sigma_sfdB)*randn(N,1)); %lognormal shadowing
 
+    %------------ SETS TRANSMIT POWER ACCORDING TO eq 2
+    %sets transmit power such that mean macro SNR  meets threshold (eq 2)
+    P_tx = db2pow(+SNR_targetdB    -   sigma_sfdB*qfuncinv(0.975)  + 10*pathloss_m*log10(mean(dm)) + NodB) 
+    P_rx = (P_tx .* dm.^(-pathloss_m) .* L);
+    for idx = 1:length(P_rx)
+        if pow2db(P_rx(idx)) - NodB > SNR_maxdB
+            P_rx(idx) = db2pow(SNR_maxdB + NodB) ;
+        end 
+    end
+
+    I = 0; %femto macro interference
+    
+    % add in femto interference to the macro user
+    if N_femto > 0
+      for idx = 1:N_femto
+          dist_from_femto = zeros(N,1);
+          for user = 1:N %distance between each macro user and the current femto
+            dist_from_femto(user) = abs( pos_femto(idx) - pos(user));                
+          end
+            % setting femto transmit power to attempt 95% connectivity within its
+            % range for received users
+            P_tx_femto = db2pow(+SNR_targetdB    -   sigma_sfdB*qfuncinv(0.975) ...
+                + 10*pathloss_m*log10(r_femto/2) + NodB);
+            L_femto = db2pow((sigma_sfdB)*randn(N,1)); %lognormal shadowing
+            P_rx_femto = (P_tx_femto .* dist_from_femto.^(-pathloss_m) .* L_femto) / wallLossdB;
+            
+            % maxes out received power for each user to 20dB
+            for idx = 1:length(P_rx)
+                if pow2db(P_rx(idx)) - NodB > SNR_maxdB
+                    P_rx(idx) = db2pow(SNR_maxdB + NodB) ;
+                end 
+            end
+            
+            rayleigh = (  abs(    sqrt(1/2) * ( randn(N,1) + 1j*randn(N,1) )    )  ).^2; %unit variance, zero mean
+            % creates interference term with the received power from the
+            % femto
+            interfere_femto = (P_rx_femto .* rayleigh);
+            I = I + interfere_femto;
+        end 
+    end
+    
+    
+    
+    
+    %rayleigh distribution on receiver
+    rayleigh = (  abs(    sqrt(1/2) * ( randn(N,1) + 1j*randn(N,1) )    )  ).^2; %unit variance, zero mean
+    SINR_macro_dB = pow2db(P_rx) + pow2db(rayleigh) - pow2db((db2pow(NodB) + I));
+    SINR_macro = db2pow(SINR_macro_dB);
+
+    capacity = log2(1 + SINR_macro);
+end
